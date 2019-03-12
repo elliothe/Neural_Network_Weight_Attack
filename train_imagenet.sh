@@ -38,6 +38,7 @@ batch_size=256
 optimizer=Adam
 quantize=test
 
+save_path=/home/elliot/Documents/ICCV_2019_BFA/save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${quantize}
 tb_path=./save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${quantize}/tb_log  #tensorboard log path
 
 # pretrained_model=/home/elliot/Documents/AAAI_2018_ver2/pretrained_model/vgg11-bbd30ac9.pth
@@ -46,7 +47,7 @@ tb_path=./save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${quantize}/tb
 {
 $PYTHON main.py --dataset ${dataset} \
     --data_path ${data_path}   \
-    --arch ${model} --save_path ./save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${quantize} \
+    --arch ${model} --save_path ${save_path}  \
     --epochs ${epochs} --learning_rate 0.0001 \
     --optimizer ${optimizer} \
 	--schedule 30 40 45  --gammas 0.2 0.2 0.5 \

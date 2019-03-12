@@ -9,9 +9,9 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 # from utils_.plot_subkernel import ternarize_weight
 from utils import AverageMeter, RecorderMeter, time_string, convert_secs2time
-from utils_.reorganize_param import reorganize_param
 from tensorboardX import SummaryWriter
 import models
+from models.quantization import quan_Conv2d, quan_Linear
 
 # import yellowFin tuner
 sys.path.append("./tuner_utils")
@@ -195,7 +195,6 @@ def main():
     # define loss function (criterion) and optimizer
     criterion = torch.nn.CrossEntropyLoss()
 
-
     if args.optimizer == "SGD":
         print("using SGD as optimizer")
         optimizer = torch.optim.SGD(filter(lambda param: param.requires_grad, net.parameters()),
@@ -250,18 +249,14 @@ def main():
     else:
         print_log("=> do not use any checkpoint for {} model".format(args.arch), log)
 
+    # update the step_size  
+    for m in net.modules():
+        if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):
+            m.__reset_stepsize__()
 
     if args.evaluate:
         validate(test_loader, net, criterion, log)
         return
-
-    # set the graident register hook to modify the gradient (gradient clipping)
-
-    # for name, param in net.named_parameters():
-    #     if "weight" in name and 'classifier' in name:
-    #         param.register_hook(lambda grad: grad.clamp(min=-0.001, max=0.001))
-
-
 
     # Main loop
     start_time = time.time()
