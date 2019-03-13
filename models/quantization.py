@@ -36,7 +36,7 @@ class quan_Conv2d(nn.Conv2d):
         super(quan_Conv2d, self).__init__(in_channels, out_channels, kernel_size,
                                           stride=stride, padding=padding, dilation=dilation,
                                           groups=groups, bias=bias)
-        self.N_bits = 8
+        self.N_bits = 6
         self.full_lvls = 2**self.N_bits
         self.half_lvls = (self.full_lvls-2)/2
         # Initialize the step size
@@ -60,7 +60,7 @@ class quan_Linear(nn.Linear):
     def __init__(self, in_features, out_features, bias=True):
         super(quan_Linear, self).__init__(in_features, out_features, bias=bias)
         
-        self.N_bits = 8
+        self.N_bits = 6
         self.full_lvls = 2**self.N_bits
         self.half_lvls = (self.full_lvls-2)/2
         # Initialize the step size

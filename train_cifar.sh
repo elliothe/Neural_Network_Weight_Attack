@@ -51,6 +51,7 @@ $PYTHON main.py --dataset ${dataset} \
 	--schedule 80 120  --gammas 0.1 0.1 \
     --batch_size ${batch_size} --workers 4 --ngpu 1 --gpu_id 1 \
     --print_freq 100 --decay 0.0002 --momentum 0.9 \
+    --optimize_step
     # --fine_tune True --resume ${pretrained_model} \
     # --evaluate
 } &

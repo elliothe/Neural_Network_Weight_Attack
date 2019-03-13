@@ -11,7 +11,8 @@ import torchvision.transforms as transforms
 from utils import AverageMeter, RecorderMeter, time_string, convert_secs2time
 from tensorboardX import SummaryWriter
 import models
-from models.quantization import quan_Conv2d, quan_Linear
+from models.quantization import quan_Conv2d, quan_Linear, quantize
+import torch.nn.functional as F
 
 # import yellowFin tuner
 sys.path.append("./tuner_utils")
@@ -42,6 +43,8 @@ parser.add_argument('--schedule', type=int, nargs='+', default=[80, 120],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gammas', type=float, nargs='+', default=[0.1, 0.1],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
+parser.add_argument('--optimize_step', dest='optimize_step', action='store_true',
+                    help='enable the step size optimization for weight quantization')
 # Checkpoints
 parser.add_argument('--print_freq', default=100, type=int, metavar='N', help='print frequency (default: 200)')
 parser.add_argument('--save_path', type=str, default='./save/', help='Folder to save checkpoints and log.')
@@ -195,9 +198,20 @@ def main():
     # define loss function (criterion) and optimizer
     criterion = torch.nn.CrossEntropyLoss()
 
+    # separate the parameters thus param groups can be updated by different optimizer
+    all_param = [
+        param for name, param in net.named_parameters()
+        if not 'step_size' in name
+    ]
+
+    step_param = [
+        param for name, param in net.named_parameters()
+        if 'step_size' in name
+    ]
+
     if args.optimizer == "SGD":
         print("using SGD as optimizer")
-        optimizer = torch.optim.SGD(filter(lambda param: param.requires_grad, net.parameters()),
+        optimizer = torch.optim.SGD(all_param,
                                     lr=state['learning_rate'],
                                     momentum=state['momentum'], weight_decay=state['decay'], nesterov=True)
 
@@ -249,10 +263,30 @@ def main():
     else:
         print_log("=> do not use any checkpoint for {} model".format(args.arch), log)
 
-    # update the step_size  
+    # update the step_size once the model is loaded  
     for m in net.modules():
         if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):
-            m.__reset_stepsize__()
+            # simple step size update based on the pretrained model or weight init
+            m.__reset_stepsize__() 
+
+    if args.optimize_step:
+        optimizer_quan =  torch.optim.SGD(
+            step_param, lr=0.01, momentum=0.9, weight_decay=0,
+            nesterov=True)
+
+        for m in net.modules():
+            if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):
+                for i in range(300): # runs 200 iterations to reduce quantization error
+                    optimizer_quan.zero_grad()
+                    weight_quan = quantize(m.weight, m.step_size, m.half_lvls)*m.step_size
+                    loss_quan = F.mse_loss(weight_quan, m.weight, reduction='mean')
+                    loss_quan.backward()
+                    optimizer_quan.step()
+
+        for m in net.modules():
+            if isinstance(m, quan_Conv2d):
+                print(m.step_size.data.item(), (m.step_size.detach()*m.half_lvls).item(),
+                        m.weight.max().item())    
 
     if args.evaluate:
         validate(test_loader, net, criterion, log)
