@@ -269,6 +269,9 @@ def main():
             # simple step size update based on the pretrained model or weight init
             m.__reset_stepsize__() 
 
+            
+
+    # block for quantizer optimization
     if args.optimize_step:
         optimizer_quan =  torch.optim.SGD(
             step_param, lr=0.01, momentum=0.9, weight_decay=0,

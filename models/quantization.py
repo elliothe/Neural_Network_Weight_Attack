@@ -4,6 +4,7 @@ from torch.autograd import Variable
 from torchvision import models
 import torch.nn.functional as F
 
+
 class _quantize_func(torch.autograd.Function):
 
     @staticmethod
@@ -36,42 +37,77 @@ class quan_Conv2d(nn.Conv2d):
         super(quan_Conv2d, self).__init__(in_channels, out_channels, kernel_size,
                                           stride=stride, padding=padding, dilation=dilation,
                                           groups=groups, bias=bias)
-        self.N_bits = 6
+        self.N_bits = 8
         self.full_lvls = 2**self.N_bits
         self.half_lvls = (self.full_lvls-2)/2
         # Initialize the step size
         self.step_size = nn.Parameter(torch.Tensor([1]), requires_grad=True)
         self.__reset_stepsize__()
+        # flag to enable the inference with quantized weight or self.weight
+        self.inf_with_weight = False  # disable by default
 
     def forward(self, input):
-        weight_quan = quantize(self.weight, self.step_size,
-                               self.half_lvls)*self.step_size
-        return F.conv2d(input, weight_quan, self.bias, self.stride, self.padding, self.dilation,
-                        self.groups)
+        if self.inf_with_weight:
+            return F.conv2d(input, self.weight*self.step_size, self.bias, self.stride, self.padding,
+                            self.dilation, self.groups)
+        else:
+            weight_quan = quantize(self.weight, self.step_size,
+                                   self.half_lvls)*self.step_size
+            return F.conv2d(input, weight_quan, self.bias, self.stride, self.padding, self.dilation,
+                            self.groups)
 
     def __reset_stepsize__(self):
         with torch.no_grad():
             self.step_size.data = self.weight.abs().max()/self.half_lvls
 
-
+    def __reset_weight__(self):
+        '''
+        This function will reconstruct the weight stored in self.weight.
+        Replacing the orginal floating-point with the quantized fix-point
+        weight representation.
+        '''
+        # replace the weight with the quantized version
+        with torch.no_grad():
+            self.weight.data = quantize(
+                self.weight, self.step_size, self.half_lvls)
+        # enable the flag, thus now computation does not invovle weight quantization
+        self.inf_with_weight = True
 
 class quan_Linear(nn.Linear):
 
     def __init__(self, in_features, out_features, bias=True):
         super(quan_Linear, self).__init__(in_features, out_features, bias=bias)
-        
-        self.N_bits = 6
+
+        self.N_bits = 8
         self.full_lvls = 2**self.N_bits
         self.half_lvls = (self.full_lvls-2)/2
         # Initialize the step size
         self.step_size = nn.Parameter(torch.Tensor([1]), requires_grad=True)
         self.__reset_stepsize__()
+        # flag to enable the inference with quantized weight or self.weight
+        self.inf_with_weight = False  # disable by default
 
     def forward(self, input):
-        weight_quan = quantize(self.weight, self.step_size,
+        if self.inf_with_weight:
+            return  F.linear(input, self.weight*self.step_size, self.bias)
+        else: 
+            weight_quan = quantize(self.weight, self.step_size,
                                self.half_lvls)*self.step_size
-        return F.linear(input, weight_quan, self.bias)
+            return F.linear(input, weight_quan, self.bias)
 
     def __reset_stepsize__(self):
         with torch.no_grad():
             self.step_size.data = self.weight.abs().max()/self.half_lvls
+
+    def __reset_weight__(self):
+        '''
+        This function will reconstruct the weight stored in self.weight.
+        Replacing the orginal floating-point with the quantized fix-point
+        weight representation.
+        '''
+        # replace the weight with the quantized version
+        with torch.no_grad():
+            self.weight.data = quantize(
+                self.weight, self.step_size, self.half_lvls)
+        # enable the flag, thus now computation does not invovle weight quantization
+        self.inf_with_weight = True
