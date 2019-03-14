@@ -54,7 +54,7 @@ $PYTHON main.py --dataset ${dataset} \
 	--schedule 30 40 45  --gammas 0.2 0.2 0.5 \
     --batch_size ${batch_size} --workers 8 --ngpu 2 \
     --print_freq 50 --decay 0.000005 --momentum 0.9 \
-    --evaluate
+    --evaluate --reset_weight
     # --fine_tune True --resume ${pretrained_model} \
     # --evaluate
 } &

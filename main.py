@@ -60,6 +60,9 @@ parser.add_argument('--gpu_id', type=int, default=0, help='device range [0,ngpu-
 parser.add_argument('--workers', type=int, default=4, help='number of data loading workers (default: 2)')
 # random seed
 parser.add_argument('--manualSeed', type=int, default=None, help='manual seed')
+# quantization
+parser.add_argument('--reset_weight', dest='reset_weight', action='store_true',
+                    help='enable the weight replacement with the quantized weight')
 
 ##########################################################################
 
@@ -269,8 +272,6 @@ def main():
             # simple step size update based on the pretrained model or weight init
             m.__reset_stepsize__() 
 
-            
-
     # block for quantizer optimization
     if args.optimize_step:
         optimizer_quan =  torch.optim.SGD(
@@ -289,7 +290,15 @@ def main():
         for m in net.modules():
             if isinstance(m, quan_Conv2d):
                 print(m.step_size.data.item(), (m.step_size.detach()*m.half_lvls).item(),
-                        m.weight.max().item())    
+                        m.weight.max().item())
+
+    # block for weight reset
+    if args.reset_weight:
+        for m in net.modules():
+            if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):
+                m.__reset_weight__()
+                print(m.weight)
+
 
     if args.evaluate:
         validate(test_loader, net, criterion, log)

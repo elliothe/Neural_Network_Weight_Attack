@@ -1,9 +1,5 @@
-
-def weight_conversion(model):
-
-
-
-
+import torch
+from models.quantization import quan_Conv2d, quan_Linear, quantize
 
 def BFA(object):
 
@@ -22,8 +18,15 @@ def BFA(object):
             loss = self.criterion(output, target) 
             
             # perform the gradient zero-out before backward to get the new gradient
+            for m in model.modules():
+                if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):
+                    if m.weight.grad is not None:
+                        m.weight.grad.data.zero_() 
 
             loss.backward()
+
+            
+
 
 
 

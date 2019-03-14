@@ -44,7 +44,7 @@ class quan_Conv2d(nn.Conv2d):
         self.step_size = nn.Parameter(torch.Tensor([1]), requires_grad=True)
         self.__reset_stepsize__()
         # flag to enable the inference with quantized weight or self.weight
-        self.inf_with_weight = False  # disable by default
+        self.inf_with_weight = False  # disabled by default
 
     def forward(self, input):
         if self.inf_with_weight:
@@ -73,6 +73,8 @@ class quan_Conv2d(nn.Conv2d):
         # enable the flag, thus now computation does not invovle weight quantization
         self.inf_with_weight = True
 
+
+
 class quan_Linear(nn.Linear):
 
     def __init__(self, in_features, out_features, bias=True):
@@ -85,7 +87,7 @@ class quan_Linear(nn.Linear):
         self.step_size = nn.Parameter(torch.Tensor([1]), requires_grad=True)
         self.__reset_stepsize__()
         # flag to enable the inference with quantized weight or self.weight
-        self.inf_with_weight = False  # disable by default
+        self.inf_with_weight = False  # disabled by default
 
     def forward(self, input):
         if self.inf_with_weight:

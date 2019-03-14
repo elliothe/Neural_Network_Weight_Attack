@@ -28,6 +28,11 @@ Since for the ImageNet simulation, we want to use directly perform the weight qu
 
 ## Bit Flipping
 
+Considering the quantized weight $w$ is a integer ranging from $-(2^{N-1})$ to $(2^{N-1}-1)$, if using $N$ bits quantization. For example, the value range is -128 to 127 with 8-bit representation. In this work, we use the two's complement as its binary format ($b_{N-1}b_{N-2}b_0$), where the back and forth conversion:
+
 Hereby, we choose the two's complement as the encoding method for 
 
 $W_b = -127 + 2^7\cdot B_7 + 2^6 \cdot B_6 + \cdots\cdots\cdots 2^1\cdot B_1 + 2^0\cdot B_0$
+
+In order to perform the BFA:
+1. Identify the 
