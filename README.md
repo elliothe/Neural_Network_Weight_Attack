@@ -36,3 +36,9 @@ $W_b = -127 + 2^7\cdot B_7 + 2^6 \cdot B_6 + \cdots\cdots\cdots 2^1\cdot B_1 + 2
 
 In order to perform the BFA:
 1. Identify the 
+
+> __Note__: The correctness of the code is also depends on the ```dtype``` setup for the quantized weight, when convert it back and forth between signed integer and two's complement (unsigned integer). By default, we use ```.short()``` for 16-bit sig
+
+<!-- ::: warning
+*asdas*
+::: -->

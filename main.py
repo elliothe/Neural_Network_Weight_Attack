@@ -12,6 +12,7 @@ from utils import AverageMeter, RecorderMeter, time_string, convert_secs2time
 from tensorboardX import SummaryWriter
 import models
 from models.quantization import quan_Conv2d, quan_Linear, quantize
+from BFA.BFA import *
 import torch.nn.functional as F
 
 # import yellowFin tuner
@@ -297,8 +298,10 @@ def main():
         for m in net.modules():
             if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):
                 m.__reset_weight__()
-                print(m.weight)
+                # print(m.weight)
 
+    attacker = BFA(criterion)
+    attacker.weight_conversion(net)
 
     if args.evaluate:
         validate(test_loader, net, criterion, log)
@@ -321,17 +324,7 @@ def main():
             + ' [Best : Accuracy={:.2f}, Error={:.2f}]'.format(recorder.max_accuracy(False),
                                                                100 - recorder.max_accuracy(False)), log)
 
-        # # ============ TensorBoard logging ============#
-        # # we show the model param initialization to give a intuition when we do the fine tuning
-
-        # for name, param in net.named_parameters():
-        #     name = name.replace('.', '/')
-        #     if "delta_th" not in name:
-        #         writer.add_histogram(name, param.clone().cpu().detach().numpy(), epoch)
-
-        # # ============ TensorBoard logging ============#
         
-
         # train for one epoch
         train_acc, train_los = train(train_loader, net, criterion, optimizer, epoch, log)
 
