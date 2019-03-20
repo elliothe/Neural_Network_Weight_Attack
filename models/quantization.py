@@ -45,6 +45,14 @@ class quan_Conv2d(nn.Conv2d):
         self.__reset_stepsize__()
         # flag to enable the inference with quantized weight or self.weight
         self.inf_with_weight = False  # disabled by default
+        
+        # create a vector to identify the weight to each bit
+        self.b_w = nn.Parameter(
+            2**torch.arange(start=self.N_bits-1,end=-1, step=-1).unsqueeze(-1).float(),
+            requires_grad = False)
+        
+        self.b_w[0] = -self.b_w[0] #in-place change MSB to negative
+        
 
     def forward(self, input):
         if self.inf_with_weight:
@@ -88,6 +96,13 @@ class quan_Linear(nn.Linear):
         self.__reset_stepsize__()
         # flag to enable the inference with quantized weight or self.weight
         self.inf_with_weight = False  # disabled by default
+        
+        # create a vector to identify the weight to each bit
+        self.b_w = nn.Parameter(
+            2**torch.arange(start=self.N_bits-1,end=-1, step=-1).unsqueeze(-1).float(),
+            requires_grad = False)
+        
+        self.b_w[0] = -self.b_w[0] #in-place reverse
 
     def forward(self, input):
         if self.inf_with_weight:
@@ -112,4 +127,5 @@ class quan_Linear(nn.Linear):
             self.weight.data = quantize(
                 self.weight, self.step_size, self.half_lvls)
         # enable the flag, thus now computation does not invovle weight quantization
-        self.inf_with_weight = True
+        self.inf_with_weight = True    
+        
