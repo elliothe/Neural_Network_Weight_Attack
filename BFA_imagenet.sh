@@ -26,42 +26,37 @@ esac
 
 DATE=`date +%Y-%m-%d`
 
-# if [ ! -d "$DIRECTORY" ]; then
-#     mkdir ./save/${DATE}/
-# fi
+if [ ! -d "$DIRECTORY" ]; then
+    mkdir ./save/${DATE}/
+fi
 
 ############### Configurations ########################
 enable_tb_display=false # enable tensorboard display
 model=resnet18_quan
 dataset=imagenet
 epochs=50
-batch_size=32
+batch_size=256
 optimizer=SGD
-info=eval
+quantize=test
 
-save_path=/home/elliot/Documents/ICCV_2019_BFA/save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${batch_size}_${info}
-tb_path=/home/elliot/Documents/ICCV_2019_BFA/save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${batch_size}_${info}/tb_log  #tensorboard log path
+save_path=/home/elliot/Documents/ICCV_2019_BFA/save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${quantize}
+tb_path=./save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${quantize}/tb_log  #tensorboard log path
 
 # pretrained_model=/home/elliot/Documents/AAAI_2018_ver2/pretrained_model/vgg11-bbd30ac9.pth
 
 ############### Neural network ############################
-COUNTER=0
 {
-while [ $COUNTER -lt 5 ]; do
-    $PYTHON main.py --dataset ${dataset} \
-        --data_path ${data_path}   \
-        --arch ${model} --save_path ${save_path}  \
-        --epochs ${epochs} --learning_rate 0.0001 \
-        --optimizer ${optimizer} \
-        --schedule 30 40 45  --gammas 0.2 0.2 0.5 \
-        --batch_size ${batch_size} --workers 8 --ngpu 2 \
-        --print_freq 50 --decay 0.000005 --momentum 0.9 \
-        --bfa --reset_weight --n_iter 20  \
-        # --manualSeed 5000
-        # --fine_tune True --resume ${pretrained_model} \
-        # --evaluate
-    let COUNTER=COUNTER+1
-done
+$PYTHON main.py --dataset ${dataset} \
+    --data_path ${data_path}   \
+    --arch ${model} --save_path ${save_path}  \
+    --epochs ${epochs} --learning_rate 0.0001 \
+    --optimizer ${optimizer} \
+	--schedule 30 40 45  --gammas 0.2 0.2 0.5 \
+    --batch_size ${batch_size} --workers 8 --ngpu 2 \
+    --print_freq 50 --decay 0.000005 --momentum 0.9 \
+    --reset_weight --bfa
+    # --fine_tune True --resume ${pretrained_model} \
+    # --evaluate
 } &
 ############## Tensorboard logging ##########################
 {

@@ -89,10 +89,10 @@ class BFA(object):
                 
         self.loss.backward()
         # init the loss_max to enable the while loop
-        loss_max = self.loss.item()
+        self.loss_max = self.loss.item()
         
         # 3. for each layer flip #bits = self.bits2flip
-        while loss_max <= self.loss.item():
+        while self.loss_max <= self.loss.item():
             
             self.n_bits2flip += 1
             # iterate all the quantized conv and linear layer
@@ -108,14 +108,14 @@ class BFA(object):
                     module.weight.data = clean_weight
         
             # after going through all the layer, now we find the layer with max loss
-            self.max_loss_module = max(self.loss_dict.items(),
+            max_loss_module = max(self.loss_dict.items(),
                                   key=operator.itemgetter(1))[0]
-            loss_max = self.loss_dict[self.max_loss_module]
+            self.loss_max = self.loss_dict[max_loss_module]
             
         # 4. if the loss_max does lead to the degradation compared to the self.loss,
         # then change the that layer's weight without putting back the clean weight
         for name, module in model.named_modules():
-            if name == self.max_loss_module:
+            if name == max_loss_module:
 #                 print(name, self.loss.item(), loss_max)
                 attack_weight = self.flip_bit(module)
                 module.weight.data = attack_weight

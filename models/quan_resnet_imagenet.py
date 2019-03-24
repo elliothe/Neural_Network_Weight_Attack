@@ -3,7 +3,7 @@ import torch.utils.model_zoo as model_zoo
 from .quantization import *
 
 
-__all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
+__all__ = ['ResNet', 'resnet18_quan', 'resnet34_quan', 'resnet50', 'resnet101',
            'resnet152']
 
 
@@ -183,7 +183,7 @@ def resnet18_quan(pretrained=True, **kwargs):
     return model
 
 
-def resnet34(pretrained=False, **kwargs):
+def resnet34_quan(pretrained=True, **kwargs):
     """Constructs a ResNet-34 model.
 
     Args:
@@ -191,7 +191,11 @@ def resnet34(pretrained=False, **kwargs):
     """
     model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet34']))
+        pretrained_dict = model_zoo.load_url(model_urls['resnet34'])
+        model_dict = model.state_dict()
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
     return model
 
 

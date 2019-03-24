@@ -14,11 +14,7 @@ import models
 from models.quantization import quan_Conv2d, quan_Linear, quantize
 from attack.BFA import *
 import torch.nn.functional as F
-import copy
 
-# import yellowFin tuner
-sys.path.append("./tuner_utils")
-from tuner_utils.yellowfin import YFOptimizer
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -36,15 +32,7 @@ parser.add_argument('--arch', metavar='ARCH', default='lbcnn', choices=model_nam
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: resnext29_8_64)')
 # Optimization options
 parser.add_argument('--epochs', type=int, default=200, help='Number of epochs to train.')
-parser.add_argument('--optimizer', type=str, default='SGD', choices=['SGD', 'Adam', 'YF'])
 parser.add_argument('--batch_size', type=int, default=128, help='Batch size.')
-parser.add_argument('--learning_rate', type=float, default=0.001, help='The Learning Rate.')
-parser.add_argument('--momentum', type=float, default=0.9, help='Momentum.')
-parser.add_argument('--decay', type=float, default=1e-4, help='Weight decay (L2 penalty).')
-parser.add_argument('--schedule', type=int, nargs='+', default=[80, 120],
-                    help='Decrease learning rate at these epochs.')
-parser.add_argument('--gammas', type=float, nargs='+', default=[0.1, 0.1],
-                    help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
 parser.add_argument('--optimize_step', dest='optimize_step', action='store_true',
                     help='enable the step size optimization for weight quantization')
 # Checkpoints
@@ -53,8 +41,6 @@ parser.add_argument('--save_path', type=str, default='./save/', help='Folder to 
 parser.add_argument('--resume', default='', type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
 parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
-parser.add_argument('--fine_tune', dest='fine_tune', action='store_true',
-                    help='fine tuning from the pre-trained model, force the start epoch be zero')
 parser.add_argument('--model_only', dest='model_only', action='store_true', help='only save the model without external utils_')
 # Acceleration
 parser.add_argument('--ngpu', type=int, default=1, help='0 = CPU.')
@@ -66,9 +52,8 @@ parser.add_argument('--manualSeed', type=int, default=None, help='manual seed')
 parser.add_argument('--reset_weight', dest='reset_weight', action='store_true',
                     help='enable the weight replacement with the quantized weight')
 # Bit Flip Attacl
-parser.add_argument('--bfa', dest='enable_bfa', action='store_true',
+parser.add_argument('--BFA', dest='BFA', action='store_true',
                     help='enable the bit-flip attack')
-parser.add_argument('--n_iter', type=int, default=20, help='number of attack iterations')
 
 ##########################################################################
 
@@ -109,7 +94,7 @@ def main():
     print_log("cudnn  version : {}".format(torch.backends.cudnn.version()), log)
 
     # Init the tensorboard path and writer
-    tb_path = os.path.join(args.save_path, 'tb_log','run_'+str(args.manualSeed))
+    tb_path = os.path.join(args.save_path, 'tb_log')
     # logger = Logger(tb_path)
     writer = SummaryWriter(tb_path)
 
@@ -191,7 +176,7 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=True,
                                                num_workers=args.workers, pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size=args.batch_size, shuffle=True,
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size=args.batch_size, shuffle=False,
                                               num_workers=args.workers, pin_memory=True)
 
     print_log("=> creating model '{}'".format(args.arch), log)
@@ -217,29 +202,6 @@ def main():
         param for name, param in net.named_parameters()
         if 'step_size' in name
     ]
-
-    if args.optimizer == "SGD":
-        print("using SGD as optimizer")
-        optimizer = torch.optim.SGD(all_param,
-                                    lr=state['learning_rate'],
-                                    momentum=state['momentum'], weight_decay=state['decay'], nesterov=True)
-
-    elif args.optimizer == "Adam":
-        print("using Adam as optimizer")
-        optimizer = torch.optim.Adam(filter(lambda param: param.requires_grad, net.parameters()),
-                                     lr=state['learning_rate'],
-                                     weight_decay=state['decay'])
-
-    elif args.optimizer == "YF":
-        print("using YellowFin as optimizer")
-        optimizer = YFOptimizer(filter(lambda param: param.requires_grad, net.parameters()), lr=state['learning_rate'],
-                                mu=state['momentum'], weight_decay=state['decay'])
-
-
-    elif args.optimizer == "RMSprop":
-        print("using RMSprop as optimizer")
-        optimizer = torch.optim.RMSprop(filter(lambda param: param.requires_grad, net.parameters()),
-                                        lr=state['learning_rate'], alpha=0.99, eps=1e-08, weight_decay=0, momentum=0)
 
     if args.use_cuda:
         net.cuda()
@@ -306,12 +268,8 @@ def main():
                 # print(m.weight)
 
     attacker = BFA(criterion)
-    net_clean = copy.deepcopy(net)
-    # weight_conversion(net)
-
-    if args.enable_bfa:
-        perform_attack(attacker, net, net_clean, test_loader, args.n_iter, log, writer)
-        return
+    # model_clean = copy.deepcopy(net)
+    weight_conversion(net)
 
     if args.evaluate:
         validate(test_loader, net, criterion, log)
@@ -339,7 +297,7 @@ def main():
         train_acc, train_los = train(train_loader, net, criterion, optimizer, epoch, log)
 
         # evaluate on validation set
-        val_acc, _, val_los = validate(test_loader, net, criterion, log)
+        val_acc, val_los = validate(test_loader, net, criterion, log)
         recorder.update(epoch, train_los, train_acc, val_los, val_acc)
         is_best = val_acc >= recorder.max_accuracy(False)
 
@@ -396,129 +354,6 @@ def main():
 
 
 
-def perform_attack(attacker, model, model_clean, test_loader, N_iter, log, writer):
-    # Note that, attack has to be done in evaluation model due to batch-norm.
-    # see: https://discuss.pytorch.org/t/what-does-model-eval-do-for-batchnorm-layer/7146
-    model.eval()
-    losses = AverageMeter()
-    iter_time = AverageMeter()
-    attack_time = AverageMeter()
-
-    for _, (data, target) in enumerate(test_loader):
-        if args.use_cuda:
-            target = target.cuda(async=True)
-            data = data.cuda()
-        # Override the target to prevent label leaking
-        _,target = model(data).data.max(1)  
-        break
-
-    val_acc_top1, val_acc_top5, val_loss = validate(test_loader, model,
-                                                 attacker.criterion, log)
-    
-    writer.add_scalar('attack/val_top1_acc', val_acc_top1, 0)
-    writer.add_scalar('attack/val_top5_acc', val_acc_top5, 0)
-    writer.add_scalar('attack/val_loss', val_loss, 0)
-
-    end = time.time()
-    for i_iter in range(N_iter):
-        print_log('**********************************', log)
-        attacker.progressive_bit_search(model, data, target)
-
-        # measure data loading time
-        attack_time.update(time.time() - end)
-        end = time.time()
-
-        h_dist = hamming_distance(model, model_clean)
-
-        # record the loss
-        losses.update(attacker.loss_max, data.size(0))
-
-        print_log('Iteration: [{:03d}/{:03d}]   '
-                  'Attack Time {attack_time.val:.3f} ({attack_time.avg:.3f})  '.format(
-                  (i_iter+1), N_iter, attack_time=attack_time, iter_time=iter_time
-                  )+ time_string(), log)
-
-        print_log('loss before attack: {:.4f}'.format(attacker.loss.item()), log)
-        print_log('loss after attack: {:.4f}'.format(attacker.loss_max), log)
-        print_log('bit flips: {:.0f}'.format(attacker.bit_counter), log)
-        print_log('hamming_dist: {:.0f}'.format(h_dist), log)
-
-        writer.add_scalar('attack/bit_flip', attacker.bit_counter, i_iter + 1)
-        writer.add_scalar('attack/h_dist', h_dist, i_iter + 1)
-        writer.add_scalar('attack/sample_loss', losses.avg, i_iter + 1)
-
-        # exam the BFA on entire val dataset
-        val_acc_top1, val_acc_top5, val_loss = validate(test_loader, model,
-                                                 attacker.criterion, log)
-        
-        writer.add_scalar('attack/val_top1_acc', val_acc_top1, i_iter + 1)
-        writer.add_scalar('attack/val_top5_acc', val_acc_top5, i_iter + 1)
-        writer.add_scalar('attack/val_loss', val_loss, i_iter + 1)
-
-        # measure elapsed time
-        iter_time.update(time.time() - end)
-        print_log('iteration Time {iter_time.val:.3f} ({iter_time.avg:.3f})'.format(
-        iter_time=iter_time), log)
-        end = time.time()
-
-    return 
-
-
-# train function (forward, backward, update)
-def train(train_loader, model, criterion, optimizer, epoch, log):
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
-    losses = AverageMeter()
-    top1 = AverageMeter()
-    top5 = AverageMeter()
-
-    # switch to train mode
-    model.train()
-
-    end = time.time()
-    for i, (input, target) in enumerate(train_loader):
-        # measure data loading time
-        data_time.update(time.time() - end)
-
-        if args.use_cuda:
-            target = target.cuda(async=True)  # the copy will be asynchronous with respect to the host.
-            input = input.cuda()
-
-        # compute output
-        output = model(input)
-        loss = criterion(output, target)
-
-        # measure accuracy and record loss
-        prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))
-        top1.update(prec1.item(), input.size(0))
-        top5.update(prec5.item(), input.size(0))
-
-        # compute gradient and do SGD step
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
-        if i % args.print_freq == 0:
-            print_log('  Epoch: [{:03d}][{:03d}/{:03d}]   '
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})   '
-                      'Data {data_time.val:.3f} ({data_time.avg:.3f})   '
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})   '
-                      'Prec@1 {top1.val:.3f} ({top1.avg:.3f})   '
-                      'Prec@5 {top5.val:.3f} ({top5.avg:.3f})   '.format(
-                epoch, i, len(train_loader), batch_time=batch_time,
-                data_time=data_time, loss=losses, top1=top1, top5=top5) + time_string(), log)
-    print_log(
-        '  **Train** Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f} Error@1 {error1:.3f}'.format(top1=top1, top5=top5,
-                                                                                              error1=100 - top1.avg),
-        log)
-    return top1.avg, losses.avg
-
-
 def validate(val_loader, model, criterion, log):
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -548,7 +383,7 @@ def validate(val_loader, model, criterion, log):
                                                                                                  error1=100 - top1.avg),
             log)
 
-    return top1.avg, top5.avg, losses.avg
+    return top1.avg, losses.avg
 
 
 def print_log(print_string, log):

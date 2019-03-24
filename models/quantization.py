@@ -59,6 +59,7 @@ class quan_Conv2d(nn.Conv2d):
             return F.conv2d(input, self.weight*self.step_size, self.bias, self.stride, self.padding,
                             self.dilation, self.groups)
         else:
+            self.__reset_stepsize__()
             weight_quan = quantize(self.weight, self.step_size,
                                    self.half_lvls)*self.step_size
             return F.conv2d(input, weight_quan, self.bias, self.stride, self.padding, self.dilation,
@@ -107,7 +108,8 @@ class quan_Linear(nn.Linear):
     def forward(self, input):
         if self.inf_with_weight:
             return  F.linear(input, self.weight*self.step_size, self.bias)
-        else: 
+        else:
+            self.__reset_stepsize__()
             weight_quan = quantize(self.weight, self.step_size,
                                self.half_lvls)*self.step_size
             return F.linear(input, weight_quan, self.bias)
