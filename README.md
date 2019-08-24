@@ -14,11 +14,26 @@ If you find this project useful to you, please cite [our work](https://arxiv.org
 }
 ```
 
+## Table of Contents
 
-## environment setup
+- [Introduction](##Introduction)
+<!-- - [Env setup](#Env_setup)
+- [Usage](#Usage)
+    - [Train](#Train) -->
+
+
+##Introduction
+
+scale_distance
+##Env setup
 We leverage the docker to ensure the user can use our code.
 
-## Usage
+##Usage
+
+Following steps to perform Bit-Flip Attack (BFA):
+1. Get a quantized model
+
+
 
 ```bash
 pip install -r requirements.txt
@@ -26,7 +41,7 @@ python main.py
 # CUDA_VISIBLE_DEVICES=2 python main.py  # to specify GPU id to ex. 2
 ```
 
-## Weight quantization
+###Model quantization
 For the goal that directly quantize the deep neural network without retraining it, we add the function ```--optimize_step``` to optimize the step-size of quantizer to minimize the loss (e.g., mean-square-error loss) between quantized weight and its full precision base. It is intriguing to find out that:
 
 - directly apply the uniform quantizer can achieve higher accuracy (close to the full precision baseline) without optimize the quantizer, for high-bit quantization (e.g., 8-bit). 
