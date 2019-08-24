@@ -1,5 +1,4 @@
 # Bit-Flips Attack:
--------------------
 
 This repository constains a Pytorch implementation of the paper "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search](https://arxiv.org/pdf/1903.12269.pdf)"
 
@@ -15,6 +14,9 @@ If you find this project useful to you, please cite [our work](https://arxiv.org
 }
 ```
 
+
+## environment setup
+We leverage the docker to ensure the user can use our code.
 
 ## Usage
 
