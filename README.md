@@ -22,13 +22,13 @@ If you find this project useful to you, please cite [our work](https://arxiv.org
     - [Train](#Train) -->
 
 
-##Introduction
+## Introduction
 
 scale_distance
-##Env setup
+## Env setup
 We leverage the docker to ensure the user can use our code.
 
-##Usage
+## Usage
 
 Following steps to perform Bit-Flip Attack (BFA):
 1. Get a quantized model
