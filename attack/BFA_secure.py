@@ -14,7 +14,9 @@ class BFA(object):
         self.bit_counter = 0
         self.k_top = k_top
         self.n_bits2flip = 0
-        self.loss = 0       
+        self.loss = 0     
+
+        # for each module, initialize a tensor  
     
     def flip_bit(self, m):
         '''
@@ -81,6 +83,7 @@ class BFA(object):
         output = model(data)
 #         _, target = output.data.max(1)
         self.loss = self.criterion(output, target)
+
         # 2. zero out the grads first, then get the grads 
         for m in model.modules():
             if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):

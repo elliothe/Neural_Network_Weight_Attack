@@ -1,0 +1,6 @@
+
+# ignore documents 
+__pycache__
+.vscode
+
+*.pyc

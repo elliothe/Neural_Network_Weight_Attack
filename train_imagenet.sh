@@ -47,7 +47,7 @@ tb_path=/home/elliot/Documents/ICCV_2019_BFA/save/${DATE}/${dataset}_${model}_${
 ############### Neural network ############################
 COUNTER=0
 {
-while [ $COUNTER -lt 5 ]; do
+while [ $COUNTER -lt 1 ]; do
     $PYTHON main.py --dataset ${dataset} \
         --data_path ${data_path}   \
         --arch ${model} --save_path ${save_path}  \
