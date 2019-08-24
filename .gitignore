@@ -1,5 +1,4 @@
-
-# ignore documents 
+# ignore folders 
 __pycache__/
 .vscode/
 
