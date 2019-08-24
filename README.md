@@ -17,7 +17,7 @@ If you find this project useful to you, please cite [our work](https://arxiv.org
 ## Table of Contents
 
 - [Introduction](#Introduction)
-- [Env setup](#Env_setup)
+- [Env setup](#Env-setup)
 <!-- - [Usage](#Usage)
     - [Train](#Train) --> 
 
