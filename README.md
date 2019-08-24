@@ -1,11 +1,18 @@
 # Bit-Flips Attack:
+-------------------
 
-This repository constains a Pytorch implementation of the paper "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search]()"
+This repository constains a Pytorch implementation of the paper "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search](https://arxiv.org/pdf/1903.12269.pdf)"
 
-If you find this project useful to you, please cite [our work]():
+If you find this project useful to you, please cite [our work](https://arxiv.org/pdf/1903.12269.pdf):
 
-```
-sad
+```bibtex
+@inproceedings{he2019bfa,
+ title={Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search},
+ author={Adnan Siraj Rakin and He, Zhezhi and Fan, Deliang},
+ booktitle={Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
+ pages={},
+ year={2019}
+}
 ```
 
 
