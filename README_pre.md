@@ -1,10 +1,9 @@
-#  Bit-Flips Attack:
-  
-  
-This repository constains a Pytorch implementation of the paper "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search](https://arxiv.org/pdf/1903.12269.pdf )"
-  
-If you find this project useful to you, please cite [our work](https://arxiv.org/pdf/1903.12269.pdf ):
-  
+# Bit-Flips Attack:
+
+This repository constains a Pytorch implementation of the paper "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search](https://arxiv.org/pdf/1903.12269.pdf)"
+
+If you find this project useful to you, please cite [our work](https://arxiv.org/pdf/1903.12269.pdf):
+
 ```bibtex
 @inproceedings{he2019bfa,
  title={Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search},
@@ -14,41 +13,38 @@ If you find this project useful to you, please cite [our work](https://arxiv.org
  year={2019}
 }
 ```
-  
-##  Table of Contents
-  
-  
-- [Introduction](#Introduction )
-- [Dependencies](#Dependencies )
-- [Usage](#Usage )
-- [Model Quantization](#Model-Quantization )
-- [Bit Flipping](#Bit-Flipping )
-  
-##  Introduction
-  
-  
+
+## Table of Contents
+
+- [Introduction](#Introduction)
+- [Dependencies](#Dependencies)
+- [Usage](#Usage)
+- [Model Quantization](#Model-Quantization)
+- [Bit Flipping](#Bit-Flipping)
+
+## Introduction
+
 This repository includes a Bit-Flip Attack (BFA) algorithm which search and identify the vulernable bits within a quantized deep neural network.
-  
-##  Dependencies:
-  
+
+## Dependencies:
   
 * Python 3.6 (Anaconda)
-* [Pytorch](https://pytorch.org/ ) >=1.01
-* [TensorboardX](https://github.com/lanpa/tensorboardX ) 
-  
-For more specific dependency, please refer [environment.yml](./environment.yml ) and [environment_setup.md](./docs/environment_setup.md )
-  
-##  Usage
-  
-  
-  
-  
+* [Pytorch](https://pytorch.org/) >=1.01
+* [TensorboardX](https://github.com/lanpa/tensorboardX) 
+
+For more specific dependency, please refer [environment.yml](./environment.yml) and [environment_setup.md](./docs/environment_setup.md)
+
+## Usage
+<!-- Our code performs Following steps for Bit-Flip Attack (BFA):
+1. Get a quantized model.
+2. Conduct BFA bit-by-bit. -->
+
 Please modify `PYTHON=`, `TENSORBOARD=` and `data_path=` in the example bash code (`BFA_imagenet.sh`) before running the code.
-  
+
 ```bash
 HOST=$(hostname)
 echo "Current host is: $HOST"
-  
+
 # Automatic check the host and configure
 case $HOST in
 "alpha")
@@ -59,13 +55,13 @@ case $HOST in
     ;;
 esac
 ```
-  
+
 Then just run the following command in the terminal.
 ```bash
 bash BFA_imagenet.sh
 # CUDA_VISIBLE_DEVICES=2 bash BFA_imagenet.sh  # to specify GPU id to ex. 2
 ```
-  
+
 The example log file of BFA on ResNet34:
 ```txt
   **Test** Prec@1 73.126 Prec@5 91.380 Error@1 26.874
@@ -90,27 +86,30 @@ iteration Time 65.671 (65.582)
 **********************************
 ```
 It shows to identify one bit througout the entire model only takes ~3 Second (i.e., Attack Time) using 128 sample images for BFA. 
-  
-  
-###  Model quantization
-  
-  
-We direct adopt the post-training quantization on the DNN pretrained model provided by the [model-zoo](https://pytorch.org/docs/stable/torchvision/models.html ) of pytorch. 
-  
+
+
+### Model quantization
+
+We direct adopt the post-training quantization on the DNN pretrained model provided by the [model-zoo](https://pytorch.org/docs/stable/torchvision/models.html) of pytorch. 
+
 > __Note__: for save the model in INT-8, additional data conversion is expected.
-  
-  
-  
-  
-###  Bit Flipping
-  
-  
-Considering the quantized weight <img src="https://latex.codecogs.com/gif.latex?w"/> is a integer ranging from <img src="https://latex.codecogs.com/gif.latex?-(2^{N-1})"/> to <img src="https://latex.codecogs.com/gif.latex?(2^{N-1}-1)"/>, if using <img src="https://latex.codecogs.com/gif.latex?N"/> bits quantization. For example, the value range is -128 to 127 with 8-bit representation. In this work, we use the two's complement as its binary format (<img src="https://latex.codecogs.com/gif.latex?b_{N-1},b_{N-2},...,b_0"/>), where the back and forth conversion can be described as:
-  
-<img src="https://latex.codecogs.com/gif.latex?W_b%20=%20-127%20+%202^7&#x5C;cdot%20B_7%20+%202^6%20&#x5C;cdot%20B_6%20+%20&#x5C;cdots&#x5C;cdots&#x5C;cdots%202^1&#x5C;cdot%20B_1%20+%202^0&#x5C;cdot%20B_0"/>
-  
-  
+
+<!-- For the goal that directly quantize the deep neural network without retraining it, we add the function ```--optimize_step``` to optimize the step-size of quantizer to minimize the loss (e.g., mean-square-error loss) between quantized weight and its full precision base. It is intriguing to find out that:
+
+
+- directly apply the uniform quantizer can achieve higher accuracy (close to the full precision baseline) without optimize the quantizer, for high-bit quantization (e.g., 8-bit). 
+
+- On the contrary, for the low-bit quantization (e.g., 4-bit), directly quantize the weight causes significant accuracy loss. With the ```--optimize_step``` enabled, accuracy can partially recover without retraining. 
+
+Since for the ImageNet simulation, we want to use directly perform the weight quantization on the pretrained weight. -->
+
+### Bit Flipping
+
+Considering the quantized weight $w$ is a integer ranging from $-(2^{N-1})$ to $(2^{N-1}-1)$, if using $N$ bits quantization. For example, the value range is -128 to 127 with 8-bit representation. In this work, we use the two's complement as its binary format ($b_{N-1},b_{N-2},...,b_0$), where the back and forth conversion can be described as:
+
+$W_b = -127 + 2^7\cdot B_7 + 2^6 \cdot B_6 + \cdots\cdots\cdots 2^1\cdot B_1 + 2^0\cdot B_0$
+
+
 > __Warning__: The correctness of the code is also depends on the ```dtype``` setup for the quantized weight, when convert it back and forth between signed integer and two's complement (unsigned integer). By default, we use ```.short()``` for 16-bit signed integers to prevent overflowing.
-  
-  
-  
+
+
