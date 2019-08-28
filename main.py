@@ -7,18 +7,15 @@ import torch
 import torch.backends.cudnn as cudnn
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
-# from utils_.plot_subkernel import ternarize_weight
 from utils import AverageMeter, RecorderMeter, time_string, convert_secs2time
 from tensorboardX import SummaryWriter
 import models
 from models.quantization import quan_Conv2d, quan_Linear, quantize
+
 from attack.BFA import *
 import torch.nn.functional as F
 import copy
 
-# import yellowFin tuner
-sys.path.append("./tuner_utils")
-from tuner_utils.yellowfin import YFOptimizer
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -45,8 +42,6 @@ parser.add_argument('--schedule', type=int, nargs='+', default=[80, 120],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gammas', type=float, nargs='+', default=[0.1, 0.1],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
-parser.add_argument('--optimize_step', dest='optimize_step', action='store_true',
-                    help='enable the step size optimization for weight quantization')
 # Checkpoints
 parser.add_argument('--print_freq', default=100, type=int, metavar='N', help='print frequency (default: 200)')
 parser.add_argument('--save_path', type=str, default='./save/', help='Folder to save checkpoints and log.')
@@ -65,7 +60,9 @@ parser.add_argument('--manualSeed', type=int, default=None, help='manual seed')
 # quantization
 parser.add_argument('--reset_weight', dest='reset_weight', action='store_true',
                     help='enable the weight replacement with the quantized weight')
-# Bit Flip Attacl
+parser.add_argument('--optimize_step', dest='optimize_step', action='store_true',
+                    help='enable the step size optimization for weight quantization')
+# Bit Flip Attac
 parser.add_argument('--bfa', dest='enable_bfa', action='store_true',
                     help='enable the bit-flip attack')
 parser.add_argument('--n_iter', type=int, default=20, help='number of attack iterations')
@@ -230,11 +227,6 @@ def main():
                                      lr=state['learning_rate'],
                                      weight_decay=state['decay'])
 
-    elif args.optimizer == "YF":
-        print("using YellowFin as optimizer")
-        optimizer = YFOptimizer(filter(lambda param: param.requires_grad, net.parameters()), lr=state['learning_rate'],
-                                mu=state['momentum'], weight_decay=state['decay'])
-
 
     elif args.optimizer == "RMSprop":
         print("using RMSprop as optimizer")
@@ -272,7 +264,7 @@ def main():
     else:
         print_log("=> do not use any checkpoint for {} model".format(args.arch), log)
 
-    # update the step_size once the model is loaded  
+    # update the step_size once the model is loaded. This is used for quantization.  
     for m in net.modules():
         if isinstance(m, quan_Conv2d) or isinstance(m, quan_Linear):
             # simple step size update based on the pretrained model or weight init

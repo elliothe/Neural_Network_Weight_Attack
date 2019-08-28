@@ -17,36 +17,63 @@ If you find this project useful to you, please cite [our work](https://arxiv.org
 ## Table of Contents
 
 - [Introduction](#Introduction)
-- [Env setup](#Env-setup)
-<!-- - [Usage](#Usage)
-    - [Train](#Train) --> 
-
+- [Dependencies](#Dependencies)
+- [Usage](#Usage)
+- [Model Quantization](#Model-Quantization)
+- [Bit Flipping](#Bit-Flipping)
 
 ## Introduction
 
 This repository includes a Bit-Flip Attack (BFA) algorithm which search and identify the vulernable bits within a quantized deep neural network.
 
-## Env setup
-We leverage the docker to ensure the user can use our code.
+## Dependencies:
+  
+* Python 3.6 (Anaconda)
+* [Pytorch](https://pytorch.org/) >=0.41
+* [TensorboardX](https://github.com/lanpa/tensorboardX) 
 
-```bash
-pip install -r requirements.txt
-python main.py
-# CUDA_VISIBLE_DEVICES=2 python main.py  # to specify GPU id to ex. 2
-```
+For more specific dependency, please refer [environment.yml](./environment.yml) and [environment_setup.md](./docs/environment_setup.md)
 
 ## Usage
 
-Perform Following steps to perform Bit-Flip Attack (BFA):
+Our code performs Following steps for Bit-Flip Attack (BFA):
 1. Get a quantized model.
 2. Conduct BFA bit-by-bit.
 
+```bash
+bash BFA_imagenet.sh
+# CUDA_VISIBLE_DEVICES=2 bash BFA_imagenet.sh  # to specify GPU id to ex. 2
+```
+
+The example log file of BFA on ResNet34:
+```txt
+  **Test** Prec@1 73.126 Prec@5 91.380 Error@1 26.874
+**********************************
+Iteration: [001/020]   Attack Time 5.714 (5.714)  [2019-08-28 04:07:25]
+loss before attack: 0.3628
+loss after attack: 0.4898
+bit flips: 1
+hamming_dist: 1
+  **Test** Prec@1 71.308 Prec@5 90.260 Error@1 28.692
+iteration Time 64.627 (64.627)
+**********************************
+Iteration: [002/020]   Attack Time 4.674 (5.194)  [2019-08-28 04:08:34]
+loss before attack: 0.4898
+loss after attack: 1.2272
+bit flips: 2
+hamming_dist: 2
+  **Test** Prec@1 58.600 Prec@5 81.688 Error@1 41.400
+iteration Time 65.103 (64.865)
+**********************************
+```
+It shows to identify one bit througout the entire model only takes ~5 Second (i.e., Attack Time). With two iteration, two bits are filpped and Top-1 accuracy on ImageNet is reduced from 73.126 to 71.308, then 58.600 respectively.
 
 
 ### Model quantization
 
 We direct adopt the post-training quantization on the DNN pretrained model provided by the [model-zoo](https://pytorch.org/docs/stable/torchvision/models.html) of pytorch. 
 
+> __Note__: for save the model in INT-8, additional data conversion is expected.
 
 <!-- For the goal that directly quantize the deep neural network without retraining it, we add the function ```--optimize_step``` to optimize the step-size of quantizer to minimize the loss (e.g., mean-square-error loss) between quantized weight and its full precision base. It is intriguing to find out that:
 
@@ -59,15 +86,13 @@ Since for the ImageNet simulation, we want to use directly perform the weight qu
 
 ## Bit Flipping
 
-Considering the quantized weight $w$ is a integer ranging from $-(2^{N-1})$ to $(2^{N-1}-1)$, if using $N$ bits quantization. For example, the value range is -128 to 127 with 8-bit representation. In this work, we use the two's complement as its binary format ($b_{N-1}b_{N-2}b_0$), where the back and forth conversion:
-
-Hereby, we choose the two's complement as the encoding method for 
+Considering the quantized weight $w$ is a integer ranging from $-(2^{N-1})$ to $(2^{N-1}-1)$, if using $N$ bits quantization. For example, the value range is -128 to 127 with 8-bit representation. In this work, we use the two's complement as its binary format ($b_{N-1},b_{N-2},...,b_0$), where the back and forth conversion can be described as:
 
 $W_b = -127 + 2^7\cdot B_7 + 2^6 \cdot B_6 + \cdots\cdots\cdots 2^1\cdot B_1 + 2^0\cdot B_0$
 
-In order to perform the BFA:
-1. Identify the 
+Then
 
-> __Note__: The correctness of the code is also depends on the ```dtype``` setup for the quantized weight, when convert it back and forth between signed integer and two's complement (unsigned integer). By default, we use ```.short()``` for 16-bit signed integers to prevent overflowing.
+
+> __Warning__: The correctness of the code is also depends on the ```dtype``` setup for the quantized weight, when convert it back and forth between signed integer and two's complement (unsigned integer). By default, we use ```.short()``` for 16-bit signed integers to prevent overflowing.
 
 
