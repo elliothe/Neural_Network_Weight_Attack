@@ -65,25 +65,27 @@ bash BFA_imagenet.sh
 The example log file of BFA on ResNet34:
 ```txt
   **Test** Prec@1 73.126 Prec@5 91.380 Error@1 26.874
+k_top is set to 10
+Attack sample size is 128
 **********************************
-Iteration: [001/020]   Attack Time 5.714 (5.714)  [2019-08-28 04:07:25]
-loss before attack: 0.3628
-loss after attack: 0.4898
+Iteration: [001/020]   Attack Time 3.241 (3.241)  [2019-08-28 07:59:27]
+loss before attack: 0.4138
+loss after attack: 0.5209
 bit flips: 1
 hamming_dist: 1
-  **Test** Prec@1 71.308 Prec@5 90.260 Error@1 28.692
-iteration Time 64.627 (64.627)
+  **Test** Prec@1 72.512 Prec@5 91.072 Error@1 27.488
+iteration Time 65.493 (65.493)
 **********************************
-Iteration: [002/020]   Attack Time 4.674 (5.194)  [2019-08-28 04:08:34]
-loss before attack: 0.4898
-loss after attack: 1.2272
+Iteration: [002/020]   Attack Time 2.667 (2.954)  [2019-08-28 08:00:35]
+loss before attack: 0.5209
+loss after attack: 0.7529
 bit flips: 2
 hamming_dist: 2
-  **Test** Prec@1 58.600 Prec@5 81.688 Error@1 41.400
-iteration Time 65.103 (64.865)
+  **Test** Prec@1 70.492 Prec@5 89.866 Error@1 29.508
+iteration Time 65.671 (65.582)
 **********************************
 ```
-It shows to identify one bit througout the entire model only takes ~5 Second (i.e., Attack Time). With two iteration, two bits are filpped and Top-1 accuracy on ImageNet is reduced from 73.126 to 71.308, then 58.600 respectively.
+It shows to identify one bit througout the entire model only takes ~3 Second (i.e., Attack Time) using 128 sample images for BFA. 
 
 
 ### Model quantization
