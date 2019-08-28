@@ -109,8 +109,6 @@ Considering the quantized weight $w$ is a integer ranging from $-(2^{N-1})$ to $
 
 $W_b = -127 + 2^7\cdot B_7 + 2^6 \cdot B_6 + \cdots\cdots\cdots 2^1\cdot B_1 + 2^0\cdot B_0$
 
-Then
-
 
 > __Warning__: The correctness of the code is also depends on the ```dtype``` setup for the quantized weight, when convert it back and forth between signed integer and two's complement (unsigned integer). By default, we use ```.short()``` for 16-bit signed integers to prevent overflowing.
 
