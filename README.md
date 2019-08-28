@@ -29,27 +29,33 @@ This repository includes a Bit-Flip Attack (BFA) algorithm which search and iden
 ## Env setup
 We leverage the docker to ensure the user can use our code.
 
-## Usage
-
-Following steps to perform Bit-Flip Attack (BFA):
-1. Get a quantized model
-
-
-
 ```bash
 pip install -r requirements.txt
 python main.py
 # CUDA_VISIBLE_DEVICES=2 python main.py  # to specify GPU id to ex. 2
 ```
 
+## Usage
+
+Perform Following steps to perform Bit-Flip Attack (BFA):
+1. Get a quantized model.
+2. Conduct BFA bit-by-bit.
+
+
+
 ### Model quantization
-For the goal that directly quantize the deep neural network without retraining it, we add the function ```--optimize_step``` to optimize the step-size of quantizer to minimize the loss (e.g., mean-square-error loss) between quantized weight and its full precision base. It is intriguing to find out that:
+
+We direct adopt the post-training quantization on the DNN pretrained model provided by the [model-zoo](https://pytorch.org/docs/stable/torchvision/models.html) of pytorch. 
+
+
+<!-- For the goal that directly quantize the deep neural network without retraining it, we add the function ```--optimize_step``` to optimize the step-size of quantizer to minimize the loss (e.g., mean-square-error loss) between quantized weight and its full precision base. It is intriguing to find out that:
+
 
 - directly apply the uniform quantizer can achieve higher accuracy (close to the full precision baseline) without optimize the quantizer, for high-bit quantization (e.g., 8-bit). 
 
 - On the contrary, for the low-bit quantization (e.g., 4-bit), directly quantize the weight causes significant accuracy loss. With the ```--optimize_step``` enabled, accuracy can partially recover without retraining. 
 
-Since for the ImageNet simulation, we want to use directly perform the weight quantization on the pretrained weight
+Since for the ImageNet simulation, we want to use directly perform the weight quantization on the pretrained weight. -->
 
 ## Bit Flipping
 
