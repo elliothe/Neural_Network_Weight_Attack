@@ -25,7 +25,7 @@ enable_tb_display=false # enable tensorboard display
 model=resnet34_quan 
 dataset=imagenet
 batch_size=256 # number of data used for identify bits
-n_iter=15 # number of iteration to perform BFA
+n_iter=5 # number of iteration to perform BFA
 
 save_path=/home/elliot/Documents/ICCV_2019_BFA/save/${DATE}/${dataset}_${model}
 tb_path=./save/${DATE}/${dataset}_${model}_${epochs}_${optimizer}_${quantize}/tb_log  #tensorboard log path

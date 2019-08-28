@@ -5,9 +5,8 @@ from attack.data_conversion import *
 
 class BFA(object):
 
-    def __init__(self, criterion, attack_mode='bits', k_top = 10):
+    def __init__(self, criterion, k_top = 10):
         
-        self.attack_mode = attack_mode
         self.criterion = criterion
         # init a loss_dict to log the loss w.r.t each layer
         self.loss_dict = {}
