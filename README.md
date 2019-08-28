@@ -29,17 +29,34 @@ This repository includes a Bit-Flip Attack (BFA) algorithm which search and iden
 ## Dependencies:
   
 * Python 3.6 (Anaconda)
-* [Pytorch](https://pytorch.org/) >=0.41
+* [Pytorch](https://pytorch.org/) >=1.01
 * [TensorboardX](https://github.com/lanpa/tensorboardX) 
 
 For more specific dependency, please refer [environment.yml](./environment.yml) and [environment_setup.md](./docs/environment_setup.md)
 
 ## Usage
-
-Our code performs Following steps for Bit-Flip Attack (BFA):
+<!-- Our code performs Following steps for Bit-Flip Attack (BFA):
 1. Get a quantized model.
-2. Conduct BFA bit-by-bit.
+2. Conduct BFA bit-by-bit. -->
 
+Please modify `PYTHON=`, `TENSORBOARD=` and `data_path=` in the example bash code (`BFA_imagenet.sh`) before running the code.
+
+```bash
+HOST=$(hostname)
+echo "Current host is: $HOST"
+
+# Automatic check the host and configure
+case $HOST in
+"alpha")
+    # PYTHON="/home/elliot/anaconda3/envs/pytorch_041/bin/python" # python environment
+    PYTHON="/home/elliot/anaconda3/envs/bindsnet/bin/python"
+    TENSORBOARD='/home/elliot/anaconda3/envs/bindsnet/bin/tensorboard'
+    data_path='/home/elliot/data/imagenet'
+    ;;
+esac
+```
+
+Then just run the following command in the terminal.
 ```bash
 bash BFA_imagenet.sh
 # CUDA_VISIBLE_DEVICES=2 bash BFA_imagenet.sh  # to specify GPU id to ex. 2

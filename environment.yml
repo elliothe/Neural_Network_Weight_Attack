@@ -1,4 +1,4 @@
-name: bindsnet
+name: bfa
 channels:
   - pytorch
   - conda-forge
