@@ -307,11 +307,12 @@ def main():
     else:
         assert False, 'Do not support dataset : {}'.format(args.dataset)
 
-    train_loader = torch.utils.data.DataLoader(train_data,
-                                               batch_size=args.attack_sample_size,
-                                               shuffle=True,
-                                               num_workers=args.workers,
-                                               pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(
+        train_data,
+        batch_size=args.attack_sample_size,
+        shuffle=True,
+        num_workers=args.workers,
+        pin_memory=True)
     test_loader = torch.utils.data.DataLoader(test_data,
                                               batch_size=args.test_batch_size,
                                               shuffle=True,

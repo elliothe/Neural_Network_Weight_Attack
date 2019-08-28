@@ -2,10 +2,10 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 from .quantization import *
 
-
-__all__ = ['ResNet', 'resnet18_quan', 'resnet34_quan', 'resnet50', 'resnet101',
-           'resnet152']
-
+__all__ = [
+    'ResNet', 'resnet18_quan', 'resnet34_quan', 'resnet50', 'resnet101',
+    'resnet152'
+]
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
@@ -18,13 +18,21 @@ model_urls = {
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
-    return quan_Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=1, bias=False)
+    return quan_Conv2d(in_planes,
+                       out_planes,
+                       kernel_size=3,
+                       stride=stride,
+                       padding=1,
+                       bias=False)
 
 
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
-    return quan_Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+    return quan_Conv2d(in_planes,
+                       out_planes,
+                       kernel_size=1,
+                       stride=stride,
+                       bias=False)
 
 
 class BasicBlock(nn.Module):
@@ -100,12 +108,19 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-
-    def __init__(self, block, layers, num_classes=1000, zero_init_residual=False):
+    def __init__(self,
+                 block,
+                 layers,
+                 num_classes=1000,
+                 zero_init_residual=False):
         super(ResNet, self).__init__()
         self.inplanes = 64
-        self.conv1 = quan_Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
-                               bias=False)
+        self.conv1 = quan_Conv2d(3,
+                                 64,
+                                 kernel_size=7,
+                                 stride=2,
+                                 padding=3,
+                                 bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -118,7 +133,9 @@ class ResNet(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight,
+                                        mode='fan_out',
+                                        nonlinearity='relu')
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
@@ -177,7 +194,10 @@ def resnet18_quan(pretrained=True, **kwargs):
     if pretrained:
         pretrained_dict = model_zoo.load_url(model_urls['resnet18'])
         model_dict = model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        pretrained_dict = {
+            k: v
+            for k, v in pretrained_dict.items() if k in model_dict
+        }
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
     return model
@@ -193,7 +213,10 @@ def resnet34_quan(pretrained=True, **kwargs):
     if pretrained:
         pretrained_dict = model_zoo.load_url(model_urls['resnet34'])
         model_dict = model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        pretrained_dict = {
+            k: v
+            for k, v in pretrained_dict.items() if k in model_dict
+        }
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
     return model

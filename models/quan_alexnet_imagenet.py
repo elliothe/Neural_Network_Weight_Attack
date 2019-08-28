@@ -2,9 +2,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 from .quantization import *
 
-
 __all__ = ['AlexNet', 'alexnet_quan']
-
 
 model_urls = {
     'alexnet': 'https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth',
@@ -12,7 +10,6 @@ model_urls = {
 
 
 class AlexNet(nn.Module):
-
     def __init__(self, num_classes=1000):
         super(AlexNet, self).__init__()
         self.features = nn.Sequential(
@@ -60,7 +57,10 @@ def alexnet_quan(pretrained=False, **kwargs):
     if pretrained:
         pretrained_dict = model_zoo.load_url(model_urls['alexnet'])
         model_dict = model.state_dict()
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+        pretrained_dict = {
+            k: v
+            for k, v in pretrained_dict.items() if k in model_dict
+        }
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
     return model
