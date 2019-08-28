@@ -1,5 +1,7 @@
+  
 #  Bit-Flips Attack:
   
+![BFA](assets/BFA.jpg?raw=true "Bit Flip Attack")
   
 This repository constains a Pytorch implementation of the paper "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search](https://arxiv.org/pdf/1903.12269.pdf )"
   
