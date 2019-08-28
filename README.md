@@ -103,7 +103,7 @@ We direct adopt the post-training quantization on the DNN pretrained model provi
 
 Since for the ImageNet simulation, we want to use directly perform the weight quantization on the pretrained weight. -->
 
-## Bit Flipping
+### Bit Flipping
 
 Considering the quantized weight $w$ is a integer ranging from $-(2^{N-1})$ to $(2^{N-1}-1)$, if using $N$ bits quantization. For example, the value range is -128 to 127 with 8-bit representation. In this work, we use the two's complement as its binary format ($b_{N-1},b_{N-2},...,b_0$), where the back and forth conversion can be described as:
 
