@@ -5,16 +5,16 @@
 
 ![BFA](assets/BFA.jpg?raw=true "Bit Flip Attack")
 
-This repository constains a Pytorch implementation of the paper "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search](https://arxiv.org/pdf/1903.12269.pdf)"
+This repository constains a Pytorch implementation of the paper, titled "[Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search](http://openaccess.thecvf.com/content_ICCV_2019/papers/Rakin_Bit-Flip_Attack_Crushing_Neural_Network_With_Progressive_Bit_Search_ICCV_2019_paper.pdf)", which is published in [ICCV-2019](http://iccv2019.thecvf.com/).
 
-If you find this project useful to you, please cite [our work](https://arxiv.org/pdf/1903.12269.pdf):
+If you find this project useful to you, please cite [our work](http://openaccess.thecvf.com/content_ICCV_2019/papers/Rakin_Bit-Flip_Attack_Crushing_Neural_Network_With_Progressive_Bit_Search_ICCV_2019_paper.pdf):
 
 ```bibtex
 @inproceedings{he2019bfa,
  title={Bit-Flip Attack: Crushing Neural Network with Progressive Bit Search},
  author={Adnan Siraj Rakin and He, Zhezhi and Fan, Deliang},
  booktitle={Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
- pages={},
+ pages={1211-1220},
  year={2019}
 }
 ```
